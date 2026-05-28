@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspección de Obra – Hacienda Pinilla</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --gold: #BEA208;
+    --gold-light: #D4B81A;
+    --gold-pale: #F5EDB0;
+    --cream: #FAF7F0;
+    --cream-dark: #F0EAD6;
+    --olive: #6B6B2A;
+    --text-dark: #2C2C1E;
+    --text-mid: #5A5A3A;
+    --border: #D4C47A;
+    --white: #FFFFFF;
+    --red: #C0392B;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E8E0CC;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--text-dark);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  #form-wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--cream);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+    border: 1px solid var(--border);
+  }
+
+  .header {
+    background: var(--white);
+    padding: 28px 40px 18px;
+    text-align: center;
+    border-bottom: 3px solid var(--gold);
+  }
+  .header-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 6px;
+  }
+  .company-name {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--text-dark);
+    text-transform: uppercase;
+  }
+  .company-subtitle {
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .title-band {
+    background: var(--gold);
+    padding: 12px 40px;
+    text-align: center;
+  }
+  .title-band h2 {
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    color: var(--white);
+    text-transform: uppercase;
+  }
+
+  .form-body {
+    padding: 32px 40px 40px;
+  }
+
+  .section-title {
+    font-family: Georgia, serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1.5px solid var(--gold);
+    padding-bottom: 5px;
+    margin-bottom: 18px;
+    margin-top: 32px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  .data-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 28px;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group label {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+  .field-group input,
+  .field-group select {
+    border: 1px solid var(--border);
+    background: var(--white);
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    color: var(--text-dark);
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .field-group input:focus,
+  .field-group select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(190,162,8,0.12); }
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--gold); pointer-events: none; font-size: 0.9rem;
+  }
+  .select-wrap select { width: 100%; padding-right: 30px; cursor: pointer; }
+
+  .inspection-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  .inspection-table thead tr { background: var(--gold); }
+  .inspection-table thead th {
+    color: var(--white);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .inspection-table thead th:first-child { text-align: left; }
+  .inspection-table tbody tr:nth-child(odd) { background: var(--cream-dark); }
+  .inspection-table tbody tr:nth-child(even) { background: var(--white); }
+  .inspection-table tbody tr:hover { background: var(--gold-pale); }
+  .inspection-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .inspection-table td:first-child { font-size: 0.87rem; color: var(--text-dark); }
+  .inspection-table td.radio-cell { text-align: center; }
+
+  .radio-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--text-mid);
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .radio-label:hover { background: var(--gold-pale); }
+  .radio-label input[type="radio"] { display: none; }
+  .radio-custom {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    flex-shrink: 0;
+    transition: border-color 0.15s;
+  }
+  .radio-label input[type="radio"]:checked ~ .radio-custom { border-color: var(--gold); }
+  .radio-label input[type="radio"]:checked ~ .radio-custom::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+  .radio-label.bien input[type="radio"]:checked ~ .radio-custom { border-color: #27AE60; }
+  .radio-label.bien input[type="radio"]:checked ~ .radio-custom::after { background: #27AE60; }
+  .radio-label.mal input[type="radio"]:checked ~ .radio-custom { border-color: var(--red); }
+  .radio-label.mal input[type="radio"]:checked ~ .radio-custom::after { background: var(--red); }
+
+  .notes-area {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    padding: 12px;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    border-radius: 3px;
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .notes-area:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(190,162,8,0.12); }
+
+  .photo-upload-area {
+    border: 2px dashed var(--border);
+    background: var(--white);
+    border-radius: 4px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 20px;
+  }
+  .photo-upload-area:hover { border-color: var(--gold); background: var(--gold-pale); }
+  .photo-upload-area .upload-icon { font-size: 2rem; color: var(--gold); margin-bottom: 6px; }
+  .photo-upload-area p { font-size: 0.85rem; color: var(--text-mid); }
+  .photo-upload-area input { display: none; }
+
+  .photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+  }
+  .photo-item {
+    border: 1px solid var(--border);
+    background: var(--white);
+    border-radius: 4px;
+    overflow: visible;
+    position: relative;
+  }
+  /* KEY FIX: img shows correctly oriented, no height constraints */
+  .photo-item img {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    display: block;
+    /* Disable browser auto-rotation so what we see = what canvas renders */
+    image-orientation: none;
+    -webkit-image-orientation: none;
+  }
+  .photo-desc { padding: 8px; }
+  .photo-desc input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--cream);
+    padding: 6px 8px;
+    font-size: 0.82rem;
+    color: var(--text-dark);
+    border-radius: 3px;
+    outline: none;
+    font-family: inherit;
+  }
+  .photo-desc input:focus { border-color: var(--gold); }
+  .photo-remove {
+    position: absolute;
+    top: 6px; right: 6px;
+    background: rgba(192,57,43,0.85);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .photo-remove:hover { background: var(--red); }
+
+  .inspector-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .inspector-name-wrap { width: 320px; }
+  .inspector-name-wrap label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    font-weight: 600;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  .inspector-name-wrap input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    color: var(--text-dark);
+    border-radius: 3px;
+    outline: none;
+    text-align: center;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .inspector-name-wrap input:focus { border-color: var(--gold); }
+
+  .signature-wrap { text-align: center; }
+  .signature-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  #signature-canvas {
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--white);
+    cursor: crosshair;
+    display: block;
+    touch-action: none;
+  }
+  .sig-clear-btn {
+    margin-top: 8px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    padding: 5px 18px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    font-family: inherit;
+  }
+  .sig-clear-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .export-wrap {
+    text-align: center;
+    margin-top: 36px;
+  }
+  .export-btn {
+    background: var(--gold);
+    color: var(--white);
+    border: none;
+    padding: 13px 42px;
+    font-family: Georgia, serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(190,162,8,0.25);
+  }
+  .export-btn:hover { background: var(--gold-light); box-shadow: 0 4px 16px rgba(190,162,8,0.35); }
+  .export-btn:active { background: var(--olive); }
+  .export-btn:disabled { background: #bbb; cursor: not-allowed; box-shadow: none; }
+
+  #export-progress {
+    display: none;
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 600px) {
+    .form-body { padding: 20px 18px 28px; }
+    .data-grid { grid-template-columns: 1fr; }
+    .inspection-table { font-size: 0.8rem; }
+    .inspection-table td { padding: 8px 8px; }
+    .photos-grid { grid-template-columns: 1fr; }
+    .company-name { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="form-wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo-row">
+      <img id="logo-img" src="" alt="Hacienda Pinilla" style="height:64px; width:auto; object-fit:contain; flex-shrink:0; display:none;">
+      <div style="text-align:center">
+        <div class="company-name">Hacienda Pinilla</div>
+        <div class="company-subtitle">Comité de Construcción y Administración</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE BAND -->
+  <div class="title-band">
+    <h2>Inspección de Obra</h2>
+  </div>
+
+  <!-- FORM BODY -->
+  <div class="form-body">
+
+    <div class="section-title">Datos Generales</div>
+    <div class="data-grid">
+      <div class="field-group">
+        <label for="propietario">Nombre del Propietario</label>
+        <input type="text" id="propietario" placeholder="Ej: Juan Pérez González">
+      </div>
+      <div class="field-group">
+        <label for="propiedad">Propiedad</label>
+        <input type="text" id="propiedad" placeholder="Ej: LG 47">
+      </div>
+      <div class="field-group">
+        <label for="avance">% Avance de Obra</label>
+        <div class="select-wrap">
+          <select id="avance">
+            <option value="">— Seleccionar —</option>
+            <option>10%</option><option>20%</option><option>30%</option>
+            <option>40%</option><option>50%</option><option>60%</option>
+            <option>70%</option><option>80%</option><option>90%</option>
+            <option>100%</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="fecha">Fecha de Inspección</label>
+        <input type="date" id="fecha">
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:30px;">Tabla de Inspección</div>
+    <table class="inspection-table" id="inspection-table">
+      <thead>
+        <tr>
+          <th style="width:48%">Ítem</th>
+          <th>Bien</th>
+          <th>Mal</th>
+          <th>No Aplica</th>
+        </tr>
+      </thead>
+      <tbody id="inspection-body"></tbody>
+    </table>
+
+    <div class="section-title">Observaciones Generales</div>
+    <textarea class="notes-area" id="notas" placeholder="Escriba aquí sus observaciones generales sobre la obra…"></textarea>
+
+    <div class="section-title">Evidencia Fotográfica</div>
+    <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+      <div class="upload-icon">📷</div>
+      <p><strong>Haga clic para adjuntar fotos</strong></p>
+      <p>Se exportarán al PDF en calidad original</p>
+      <input type="file" id="photo-input" accept="image/*" multiple>
+    </div>
+    <div class="photos-grid" id="photos-grid"></div>
+
+    <hr class="divider">
+
+    <div class="section-title" style="text-align:center; border-bottom:none; padding-bottom:0; letter-spacing:0.22em;">Inspector</div>
+    <div class="inspector-section">
+      <div class="inspector-name-wrap">
+        <label for="inspector-name">Nombre del Inspector</label>
+        <input type="text" id="inspector-name" placeholder="Nombre completo">
+      </div>
+      <div class="signature-wrap">
+        <div class="signature-label">Firma Digital</div>
+        <canvas id="signature-canvas" width="380" height="160"></canvas>
+        <br>
+        <button class="sig-clear-btn" onclick="clearSignature()">Limpiar Firma</button>
+      </div>
+    </div>
+
+    <div class="export-wrap">
+      <button class="export-btn" id="export-btn" onclick="exportPDF()">
+        ⬇ Exportar PDF
+      </button>
+      <div id="export-progress">Generando PDF, por favor espere…</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── LOAD LOGO FROM LOCAL FILE ──
+// Drop your "Logo Hacienda Pinilla 2013.png" onto this page or place it beside this HTML.
+// The logo auto-loads if found at ./Logo Hacienda Pinilla 2013.png
+// Or use the hidden file input below.
+(function() {
+  const logoEl = document.getElementById('logo-img');
+  // Try fetching logo from same folder
+  fetch('Logo Hacienda Pinilla 2013.png')
+    .then(r => { if (r.ok) return r.blob(); throw new Error('not found'); })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      logoEl.src = url;
+      logoEl.style.display = '';
+    })
+    .catch(() => {
+      // Logo not found locally — hide gracefully
+      logoEl.style.display = 'none';
+    });
+})();
+
+// ── INSPECTION ITEMS ──
+const items = [
+  'Estado general del terreno',
+  'Nivelación y compactación del suelo',
+  'Drenaje y evacuación de aguas',
+  'Accesos y vías de circulación',
+  'Instalaciones eléctricas provisionales',
+  'Señalización de seguridad',
+  'Materiales almacenados correctamente',
+  'Permisos y documentación visible'
+];
+
+const tbody = document.getElementById('inspection-body');
+items.forEach((item, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${item}</td>
+    <td class="radio-cell">
+      <label class="radio-label bien">
+        <input type="radio" name="item${i}" value="BIEN">
+        <span class="radio-custom"></span>
+      </label>
+    </td>
+    <td class="radio-cell">
+      <label class="radio-label mal">
+        <input type="radio" name="item${i}" value="MAL">
+        <span class="radio-custom"></span>
+      </label>
+    </td>
+    <td class="radio-cell">
+      <label class="radio-label">
+        <input type="radio" name="item${i}" value="NO APLICA">
+        <span class="radio-custom"></span>
+      </label>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// ── SIGNATURE ──
+const canvas = document.getElementById('signature-canvas');
+const ctx = canvas.getContext('2d');
+ctx.strokeStyle = '#1A1A0A';
+ctx.lineWidth = 2;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+let drawing = false, lastX = 0, lastY = 0;
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+canvas.addEventListener('mousedown', e => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; });
+canvas.addEventListener('mousemove', e => {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+  lastX = p.x; lastY = p.y;
+});
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseleave', () => drawing = false);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; }, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+  lastX = p.x; lastY = p.y;
+}, { passive: false });
+canvas.addEventListener('touchend', () => drawing = false);
+function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+// ── PHOTOS: EXIF-CORRECTED ──
+const photoData = [];
+
+/**
+ * Reads EXIF orientation from ArrayBuffer and returns rotation degrees needed.
+ * Returns 0, 90, 180, or 270 (clockwise rotation to apply).
+ */
+function readExifOrientation(buffer) {
+  try {
+    const view = new DataView(buffer);
+    // Must start with JPEG SOI marker
+    if (view.getUint16(0, false) !== 0xFFD8) return 1;
+
+    let offset = 2;
+    while (offset < view.byteLength - 2) {
+      const marker = view.getUint16(offset, false);
+      offset += 2;
+
+      if (marker === 0xFFE1) {
+        // APP1 marker - check for Exif header
+        const segLen = view.getUint16(offset, false);
+        offset += 2;
+
+        // Check "Exif\0\0"
+        if (view.getUint32(offset, false) !== 0x45786966) return 1; // not Exif
+        if (view.getUint16(offset + 4, false) !== 0x0000) return 1;
+
+        const tiffOffset = offset + 6;
+        const little = view.getUint16(tiffOffset, false) === 0x4949;
+
+        // Validate TIFF header
+        const magic = view.getUint16(tiffOffset + 2, little);
+        if (magic !== 42) return 1;
+
+        const ifd0 = tiffOffset + view.getUint32(tiffOffset + 4, little);
+        const numEntries = view.getUint16(ifd0, little);
+
+        for (let i = 0; i < numEntries; i++) {
+          const entryOffset = ifd0 + 2 + i * 12;
+          if (entryOffset + 12 > view.byteLength) break;
+          const tag = view.getUint16(entryOffset, little);
+          if (tag === 0x0112) { // Orientation tag
+            return view.getUint16(entryOffset + 8, little);
+          }
+        }
+        return 1;
+      } else if ((marker & 0xFF00) === 0xFF00) {
+        // Skip other markers
+        if (offset + 2 > view.byteLength) break;
+        offset += view.getUint16(offset, false);
+      } else {
+        break;
+      }
+    }
+  } catch(e) {}
+  return 1;
+}
+
+/**
+ * Takes a File, reads EXIF orientation, draws to canvas with correct rotation,
+ * returns a base64 data URL that is already properly oriented.
+ */
+function corregirOrientacionImagen(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onerror = () => resolve(null);
+    reader.onload = (e) => {
+      const buffer = e.target.result;
+      const orientation = readExifOrientation(buffer);
+
+      // Create blob URL to load the image
+      const blob = new Blob([buffer], { type: file.type || 'image/jpeg' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const img = new Image();
+      img.onerror = () => {
+        URL.revokeObjectURL(blobUrl);
+        resolve(blobUrl); // fallback: return original
+      };
+      img.onload = () => {
+        URL.revokeObjectURL(blobUrl);
+
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+
+        const offscreen = document.createElement('canvas');
+        const oc = offscreen.getContext('2d');
+
+        // Orientations 5-8 swap width/height
+        const swap = [5, 6, 7, 8].includes(orientation);
+        offscreen.width  = swap ? h : w;
+        offscreen.height = swap ? w : h;
+
+        // Apply transform based on EXIF orientation value
+        // See: https://www.impulseadventure.com/photo/exif-orientation.html
+        switch (orientation) {
+          case 1: break; // normal
+          case 2: oc.transform(-1, 0, 0,  1, w, 0); break;
+          case 3: oc.transform(-1, 0, 0, -1, w, h); break;
+          case 4: oc.transform( 1, 0, 0, -1, 0, h); break;
+          case 5: oc.transform( 0, 1, 1,  0, 0, 0); break;
+          case 6: oc.transform( 0, 1,-1,  0, h, 0); break;
+          case 7: oc.transform( 0,-1,-1,  0, h, w); break;
+          case 8: oc.transform( 0,-1, 1,  0, 0, w); break;
+          default: break;
+        }
+
+        oc.drawImage(img, 0, 0);
+        resolve(offscreen.toDataURL('image/jpeg', 0.92));
+      };
+
+      // Set src AFTER onload is defined
+      img.src = blobUrl;
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+document.getElementById('photo-input').addEventListener('change', async function(e) {
+  const files = Array.from(e.target.files);
+  for (const file of files) {
+    const corrected = await corregirOrientacionImagen(file);
+    if (corrected) {
+      photoData.push({ dataUrl: corrected, description: '', fileName: file.name });
+      renderPhotos();
+    }
+  }
+  this.value = '';
+});
+
+function renderPhotos() {
+  const grid = document.getElementById('photos-grid');
+  grid.innerHTML = '';
+  photoData.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'photo-item';
+    div.innerHTML = `
+      <img src="${p.dataUrl}" alt="Foto ${i+1}">
+      <button class="photo-remove" title="Eliminar" onclick="removePhoto(${i})">✕</button>
+      <div class="photo-desc">
+        <input type="text" placeholder="Descripción de la foto…" value="${p.description}"
+          oninput="photoData[${i}].description = this.value">
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function removePhoto(i) {
+  photoData.splice(i, 1);
+  renderPhotos();
+}
+
+// ── HELPERS ──
+function fmtDate(val) {
+  if (!val) return '—';
+  const [y,m,d] = val.split('-');
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(d)} de ${months[parseInt(m)-1]} de ${y}`;
+}
+
+function getRadioValue(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '—';
+}
+
+// ── PDF EXPORT ──
+async function exportPDF() {
+  const btn = document.getElementById('export-btn');
+  const prog = document.getElementById('export-progress');
+  btn.disabled = true;
+  prog.style.display = 'block';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const pageW = 210, pageH = 297;
+    const marginL = 18, marginR = 18, marginT = 18, marginB = 22;
+    const contentW = pageW - marginL - marginR;
+    let y = marginT;
+    let pageNum = 1;
+
+    const GOLD = [190, 162, 8];
+    const CREAM_DARK = [240, 234, 214];
+    const WHITE = [255, 255, 255];
+    const TEXT_DARK = [44, 44, 30];
+    const TEXT_MID = [90, 90, 58];
+    const RED = [192, 57, 43];
+    const GREEN = [39, 174, 96];
+    const BORDER = [212, 196, 122];
+
+    const formName = 'Inspección de Obra – Hacienda Pinilla';
+    const fechaVal = fmtDate(document.getElementById('fecha').value);
+
+    function addFooter() {
+      doc.setFillColor(...GOLD);
+      doc.rect(0, pageH - 12, pageW, 12, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...WHITE);
+      doc.text(formName, marginL, pageH - 4);
+      doc.text(`Fecha: ${fechaVal}`, pageW / 2, pageH - 4, { align: 'center' });
+      doc.text(`Página ${pageNum}`, pageW - marginR, pageH - 4, { align: 'right' });
+    }
+
+    function checkPage(needed) {
+      if (y + needed > pageH - marginB - 14) {
+        addFooter();
+        doc.addPage();
+        pageNum++;
+        y = marginT;
+        return true;
+      }
+      return false;
+    }
+
+    function drawHeader() {
+      doc.setFillColor(...WHITE);
+      doc.rect(0, 0, pageW, 38, 'F');
+
+      // Logo
+      const logoEl = document.getElementById('logo-img');
+      if (logoEl && logoEl.complete && logoEl.naturalWidth > 0 && logoEl.style.display !== 'none') {
+        const maxLH = 17, maxLW = 30;
+        const lAspect = logoEl.naturalWidth / logoEl.naturalHeight;
+        let lH = maxLH, lW = lH * lAspect;
+        if (lW > maxLW) { lW = maxLW; lH = lW / lAspect; }
+        const lY = (24 - lH) / 2 + 2;
+        try {
+          // Draw logo to canvas to get a clean base64
+          const lc = document.createElement('canvas');
+          lc.width = logoEl.naturalWidth;
+          lc.height = logoEl.naturalHeight;
+          lc.getContext('2d').drawImage(logoEl, 0, 0);
+          doc.addImage(lc.toDataURL('image/png'), 'PNG', marginL, lY, lW, lH, undefined, 'NONE');
+        } catch(e) {}
+      }
+
+      doc.setFont('times', 'bold');
+      doc.setFontSize(17);
+      doc.setTextColor(...TEXT_DARK);
+      doc.text('HACIENDA PINILLA', pageW / 2, 14, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...TEXT_MID);
+      doc.text('COMITÉ DE CONSTRUCCIÓN Y ADMINISTRACIÓN', pageW / 2, 20, { align: 'center' });
+
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.8);
+      doc.line(marginL, 24, pageW - marginR, 24);
+
+      doc.setFillColor(...GOLD);
+      doc.rect(0, 26, pageW, 11, 'F');
+      doc.setFont('times', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(...WHITE);
+      doc.text('INSPECCIÓN DE OBRA', pageW / 2, 33.5, { align: 'center' });
+
+      y = 46;
+    }
+
+    drawHeader();
+
+    function sectionLabel(text) {
+      checkPage(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...GOLD);
+      doc.text(text.toUpperCase(), marginL, y);
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.4);
+      doc.line(marginL, y + 1.5, marginL + contentW, y + 1.5);
+      y += 8;
+    }
+
+    // DATOS GENERALES
+    sectionLabel('Datos Generales');
+    const fields = [
+      ['Nombre del Propietario', document.getElementById('propietario').value || '—'],
+      ['Propiedad', document.getElementById('propiedad').value || '—'],
+      ['% Avance de Obra', document.getElementById('avance').value || '—'],
+      ['Fecha de Inspección', fechaVal],
+    ];
+    const colW = contentW / 2 - 4;
+    fields.forEach((f, i) => {
+      const col = i % 2;
+      const xPos = marginL + col * (colW + 8);
+      if (i % 2 === 0 && i > 0) y += 12;
+      doc.setFillColor(...CREAM_DARK);
+      doc.roundedRect(xPos, y - 4, colW, 10, 1, 1, 'F');
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(xPos, y - 4, colW, 10, 1, 1, 'S');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.5);
+      doc.setTextColor(...TEXT_MID);
+      doc.text(f[0].toUpperCase(), xPos + 4, y - 0.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...TEXT_DARK);
+      doc.text(f[1], xPos + 4, y + 4.5);
+      if (col === 1 || i === fields.length - 1) y += 14;
+    });
+    y += 6;
+
+    // INSPECTION TABLE
+    checkPage(30);
+    sectionLabel('Tabla de Inspección');
+    const colWidths = [contentW * 0.52, contentW * 0.16, contentW * 0.16, contentW * 0.16];
+    const headers = ['Ítem', 'Bien', 'Mal', 'No Aplica'];
+    const rowH = 9;
+    doc.setFillColor(...GOLD);
+    doc.rect(marginL, y, contentW, rowH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...WHITE);
+    let xCur = marginL;
+    headers.forEach((h, i) => {
+      const align = i === 0 ? 'left' : 'center';
+      const xText = i === 0 ? xCur + 3 : xCur + colWidths[i] / 2;
+      doc.text(h.toUpperCase(), xText, y + 6, { align });
+      xCur += colWidths[i];
+    });
+    y += rowH;
+
+    items.forEach((item, idx) => {
+      checkPage(rowH + 2);
+      const val = getRadioValue(`item${idx}`);
+      doc.setFillColor(...(idx % 2 === 0 ? CREAM_DARK : WHITE));
+      doc.rect(marginL, y, contentW, rowH, 'F');
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(0.2);
+      doc.rect(marginL, y, contentW, rowH, 'S');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...TEXT_DARK);
+      doc.text(item, marginL + 3, y + 6);
+      const options = ['BIEN', 'MAL', 'NO APLICA'];
+      let xOpt = marginL + colWidths[0];
+      options.forEach((opt, oi) => {
+        const cx = xOpt + colWidths[oi + 1] / 2;
+        const cy = y + rowH / 2;
+        const filled = val === opt;
+        const color = opt === 'BIEN' ? GREEN : opt === 'MAL' ? RED : GOLD;
+        doc.setDrawColor(...(filled ? color : BORDER));
+        doc.setLineWidth(0.5);
+        if (filled) {
+          doc.setFillColor(...color);
+          doc.circle(cx, cy, 2.5, 'FD');
+          doc.setFillColor(...WHITE);
+          doc.circle(cx, cy, 1.1, 'F');
+        } else {
+          doc.circle(cx, cy, 2.5, 'S');
+        }
+        xOpt += colWidths[oi + 1];
+      });
+      y += rowH;
+    });
+    y += 10;
+
+    // NOTES
+    checkPage(30);
+    sectionLabel('Observaciones Generales');
+    const notasVal = document.getElementById('notas').value || '(Sin observaciones)';
+    const notasLines = doc.splitTextToSize(notasVal, contentW - 8);
+    const notasH = Math.max(20, notasLines.length * 5 + 8);
+    checkPage(notasH + 4);
+    doc.setFillColor(...WHITE);
+    doc.setDrawColor(...BORDER);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(marginL, y, contentW, notasH, 2, 2, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...TEXT_DARK);
+    doc.text(notasLines, marginL + 4, y + 6);
+    y += notasH + 10;
+
+    // PHOTOS — 2 per page, full width, correct orientation
+    if (photoData.length > 0) {
+      addFooter();
+      doc.addPage();
+      pageNum++;
+      y = marginT;
+      sectionLabel('Evidencia Fotográfica');
+
+      const maxPhotoH = 110;
+
+      for (let i = 0; i < photoData.length; i++) {
+        const p = photoData[i];
+
+        // Load image to get dimensions
+        const img = new Image();
+        img.src = p.dataUrl;
+        await new Promise(r => { img.onload = r; img.onerror = r; });
+
+        const nw = img.naturalWidth  || 800;
+        const nh = img.naturalHeight || 600;
+        const ratio = nw / nh;
+
+        // Scale to fit full content width, max height
+        let drawW = contentW;
+        let drawH = drawW / ratio;
+        if (drawH > maxPhotoH) {
+          drawH = maxPhotoH;
+          drawW = drawH * ratio;
+        }
+
+        const descText = p.description || `Foto ${i + 1}`;
+        const descLines = doc.splitTextToSize(descText, contentW);
+        const descH = descLines.length * 4.5 + 6;
+        const totalNeeded = drawH + descH + 10;
+
+        // New page if this photo + its caption won't fit
+        if (y + totalNeeded > pageH - marginB - 14) {
+          addFooter();
+          doc.addPage();
+          pageNum++;
+          y = marginT;
+        }
+
+        const xImg = marginL + (contentW - drawW) / 2;
+        doc.addImage(p.dataUrl, 'JPEG', xImg, y, drawW, drawH, undefined, 'NONE');
+        y += drawH + 3;
+
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...TEXT_MID);
+        doc.text(descLines, pageW / 2, y, { align: 'center' });
+        y += descH;
+
+        // Separator between photos (not after last)
+        if (i < photoData.length - 1) {
+          y += 4;
+          doc.setDrawColor(...BORDER);
+          doc.setLineWidth(0.2);
+          doc.line(marginL + 20, y, pageW - marginR - 20, y);
+          y += 6;
+        }
+      }
+      y += 6;
+    }
+
+    // INSPECTOR
+    checkPage(70);
+    sectionLabel('Inspector');
+    const inspName = document.getElementById('inspector-name').value || '—';
+    doc.setFont('times', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...TEXT_DARK);
+    doc.text(inspName, pageW / 2, y + 4, { align: 'center' });
+    y += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...TEXT_MID);
+    doc.text('FIRMA DIGITAL', pageW / 2, y, { align: 'center' });
+    y += 5;
+    const sigW = 80, sigH = 34;
+    const sigX = (pageW - sigW) / 2;
+    doc.setFillColor(...WHITE);
+    doc.setDrawColor(...BORDER);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(sigX, y, sigW, sigH, 2, 2, 'FD');
+    doc.addImage(canvas.toDataURL('image/png'), 'PNG', sigX, y, sigW, sigH);
+    y += sigH + 3;
+    doc.setDrawColor(...GOLD);
+    doc.setLineWidth(0.5);
+    doc.line(sigX, y, sigX + sigW, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...TEXT_MID);
+    doc.text('Firma del Inspector', pageW / 2, y, { align: 'center' });
+
+    addFooter();
+
+    const safeDate = document.getElementById('fecha').value || 'sin-fecha';
+    const safePropiedad = (document.getElementById('propiedad').value || 'propiedad').replace(/\s+/g, '-');
+    doc.save(`Inspeccion-Obra-${safePropiedad}-${safeDate}.pdf`);
+
+  } catch(err) {
+    console.error('PDF Error:', err);
+    alert('Error al generar el PDF: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    prog.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
